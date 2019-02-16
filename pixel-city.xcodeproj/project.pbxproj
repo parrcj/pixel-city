@@ -12,6 +12,7 @@
 		7C58A8502214A4DB00994A6A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7C58A84E2214A4DB00994A6A /* Main.storyboard */; };
 		7C58A8522214A4DE00994A6A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7C58A8512214A4DE00994A6A /* Assets.xcassets */; };
 		7C58A8552214A4DE00994A6A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7C58A8532214A4DE00994A6A /* LaunchScreen.storyboard */; };
+		7C58A8612218558200994A6A /* DroppablePin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C58A8602218558200994A6A /* DroppablePin.swift */; };
 		BE54E3FC3AE57D2F48FF25A9 /* Pods_pixel_city.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E91D26A8A2255FB329F5890 /* Pods_pixel_city.framework */; };
 /* End PBXBuildFile section */
 
@@ -25,6 +26,7 @@
 		7C58A8512214A4DE00994A6A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7C58A8542214A4DE00994A6A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7C58A8562214A4DE00994A6A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7C58A8602218558200994A6A /* DroppablePin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroppablePin.swift; sourceTree = "<group>"; };
 		C2AB242DE4BBB129B710C416 /* Pods-pixel-city.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pixel-city.release.xcconfig"; path = "Target Support Files/Pods-pixel-city/Pods-pixel-city.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -85,6 +87,7 @@
 		7C58A85D2214A51D00994A6A /* View */ = {
 			isa = PBXGroup;
 			children = (
+				7C58A8602218558200994A6A /* DroppablePin.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -109,7 +112,6 @@
 				4466AF1FE1D394C82200C832 /* Pods-pixel-city.debug.xcconfig */,
 				C2AB242DE4BBB129B710C416 /* Pods-pixel-city.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -244,6 +246,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7C58A84D2214A4DB00994A6A /* MapVC.swift in Sources */,
+				7C58A8612218558200994A6A /* DroppablePin.swift in Sources */,
 				7C58A84B2214A4DB00994A6A /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
