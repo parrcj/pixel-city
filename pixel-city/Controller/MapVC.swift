@@ -14,10 +14,12 @@ import AlamofireImage
 
 class MapVC: UIViewController, UIGestureRecognizerDelegate {
     
+    //I've added photo meta data to PopVC.  One thing I considered, but decided against due to time, was to ensure tha the meta data corresponded to the photo it was displayed on - as at the moment this is assumed on the basis that the array of meta data is in the same order as the array of images and this, in turn, is dependent on the api method returning in the same order as it was called.  I think to do this would have involved the creation of a new image array with an image Id reference.
+    
+    
     //OUTLETS
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var pullUpViewHeightConstraint: NSLayoutConstraint!
-    
     @IBOutlet weak var pullUpView: UIView!
     
     //PROPERTIES
@@ -36,6 +38,11 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
     var imageUrlArray = [String]()
     var imageArray = [UIImage]()
     
+    //Chris' challenge properties
+    
+    var photoInfoCallArray = [PhotoInfoCall]()
+    var photoInfoArray = [PhotoInfo]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         mapView.delegate = self
@@ -48,6 +55,8 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
         collectionView?.delegate = self
         collectionView?.dataSource = self
         collectionView?.backgroundColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)
+        
+        registerForPreviewing(with: self, sourceView: collectionView!)
         
         pullUpView.addSubview(collectionView!)
     }
@@ -146,6 +155,8 @@ extension MapVC: MKMapViewDelegate {
         
         imageUrlArray = []
         imageArray = []
+        photoInfoArray = []
+        photoInfoCallArray = []
         collectionView?.reloadData()
         
         animateViewUp()
@@ -164,6 +175,8 @@ extension MapVC: MKMapViewDelegate {
         
         retrieveUrls(forAnnotation: annotation) { (finished) in
             if finished {
+                
+                
                 self.retrieveImages(handler: { (finished) in
                     if finished {
                         self.removeSpinner()
@@ -171,6 +184,17 @@ extension MapVC: MKMapViewDelegate {
                         self.collectionView?.reloadData()
                     }
                 })
+                
+                //Chris' challenge add
+                
+                self.retrievePhotoInfo(handler: { (finished) in
+                    if finished {
+                        //print(self.photoInfoArray)
+                    }
+                })
+                
+                
+                
             }
         }
     }
@@ -184,11 +208,16 @@ extension MapVC: MKMapViewDelegate {
     func retrieveUrls(forAnnotation annotation: DroppablePin, handler: @escaping (_ status: Bool) -> ()) {
         Alamofire.request(flickrUrl(forApiKey: apiKey, withAnnotation: annotation, andNumberOfPhotos: 40)).responseJSON { (response) in
             guard let json = response.result.value as? Dictionary<String, AnyObject> else { return }
+            //print(json)
             let photosDict = json["photos"] as! Dictionary<String, AnyObject>
             let photosDictArray = photosDict["photo"] as! [Dictionary<String, AnyObject>]
             for photo in photosDictArray {
                 let postUrl = "https://farm\(photo["farm"]!).staticflickr.com/\(photo["server"]!)/\(photo["id"]!)_\(photo["secret"]!)_h_d.jpg"
+                //Chris' challenge addition
+                let photoInfo = PhotoInfoCall(photoId: photo["id"] as! String, secret: photo["secret"] as! String)
             self.imageUrlArray.append(postUrl)
+                //Chris' challenge addition
+            self.photoInfoCallArray.append(photoInfo)
             }
             handler(true)
         }
@@ -198,6 +227,7 @@ extension MapVC: MKMapViewDelegate {
         for url in imageUrlArray {
             Alamofire.request(url).responseImage { (response) in
                 guard let image = response.result.value else { return }
+                
                 self.imageArray.append(image)
                 self.progressLbl?.text = "\(self.imageArray.count)/40 IMAGES DOWNLOADED"
                 
@@ -207,6 +237,36 @@ extension MapVC: MKMapViewDelegate {
             }
         }
     }
+    
+    //Chris' challenge add
+    
+    func retrievePhotoInfo(handler: @escaping (_ status: Bool) -> ()){
+        for photo in photoInfoCallArray {
+            Alamofire.request(flickrPhotoInfoUrl(forApiKey: apiKey, photoId: photo.photoId, secret: photo.secret)).responseJSON { (response) in
+                guard let json = response.result.value as? Dictionary<String, AnyObject> else { return }
+                let photoDict = json["photo"] as! Dictionary<String, AnyObject>
+                
+                //Get date taken
+                let datesDict = photoDict["dates"]! as! Dictionary<String, AnyObject>
+                let dateTaken = datesDict["taken"] as! String
+                
+                //Get username
+                let userDict = photoDict["owner"] as! Dictionary<String, AnyObject>
+                let userName = userDict["username"] as! String
+                
+                //Get number of views
+                let numberOfViews = photoDict["views"] as! String
+                
+                //Create object with photo meta data
+                let photoInfo = PhotoInfo(dateTaken: dateTaken, userName: userName, numberOfViews: numberOfViews)
+                self.photoInfoArray.append(photoInfo)
+                
+                handler(true)
+            }
+        }
+    }
+    
+    
     
     func cancelAllSessions(){
         Alamofire.SessionManager.default.session.getTasksWithCompletionHandler { (sessionDataTask, uploadData, downloadData) in
@@ -252,9 +312,27 @@ extension MapVC: UICollectionViewDelegate, UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let popVC = storyboard?.instantiateViewController(withIdentifier: "PopVC") as? PopVC else { return }
-        popVC.initData(forImage: imageArray[indexPath.row])
+        popVC.initData(forImage: imageArray[indexPath.row], forPhotoInfo: photoInfoArray[indexPath.row])
         present(popVC, animated: true, completion: nil)
     }
 }
 
-
+extension MapVC: UIViewControllerPreviewingDelegate {
+    func previewingContext(_ previewingContext: UIViewControllerPreviewing, viewControllerForLocation location: CGPoint) -> UIViewController? {
+        guard let indexPath = collectionView?.indexPathForItem(at: location), let cell = collectionView?.cellForItem(at: indexPath) else { return nil }
+        
+        guard let popVC = storyboard?.instantiateViewController(withIdentifier: "PopVC") as? PopVC else { return nil }
+        
+        popVC.initData(forImage: imageArray[indexPath.row], forPhotoInfo: photoInfoArray[indexPath.row])
+        
+        
+       // initData(forImage image: UIImage, forUser user: String, forDateTaken dateTaken: String, forViews numberOfViews: String){
+        
+        previewingContext.sourceRect = cell.contentView.frame
+        return popVC
+    }
+    
+    func previewingContext(_ previewingContext: UIViewControllerPreviewing, commit viewControllerToCommit: UIViewController) {
+        show(viewControllerToCommit, sender: self)
+    }
+}
